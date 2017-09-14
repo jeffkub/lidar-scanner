@@ -1,16 +1,23 @@
+import re
 from twisted.internet import reactor, task
 from twisted.internet.protocol import Protocol
 from twisted.internet.serialport import SerialPort
 
 
 class GrblClient(Protocol):
+    statusReportMsg = re.compile(r"^<(\S*)>$")
+
     def __init__(self):
         self.port = None
         self.statusTask = task.LoopingCall(self.queryStatus)
         self.buffer = ''
 
     def _recvMessage(self, msg):
-        print('grbl: {}'.format(msg))
+        #print('grbl: {}'.format(msg))
+
+        match = self.statusReportMsg.match(msg)
+        if match:
+            print('grlb status: {}'.format(match.group(1)))
 
     # Client methods
     def open(self, port, *args, **kwargs):

@@ -6,8 +6,8 @@ from lidar_client import LidarClient
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--grbl', default='/dev/ttyUSB0')
-    parser.add_argument('--lidar', default='/dev/ttyUSB1')
+    parser.add_argument('--grbl', default='/dev/grbl')
+    parser.add_argument('--lidar', default='/dev/lidar')
 
     args = parser.parse_args()
 
