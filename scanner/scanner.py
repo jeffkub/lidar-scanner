@@ -14,7 +14,7 @@ if __name__ == '__main__':
     grbl = GrblClient()
     grbl.open(args.grbl, baudrate='115200')
 
-    #lidar = LidarClient()
-    #lidar.open(args.lidar, baudrate='115200')
+    lidar = LidarClient()
+    lidar.open(args.lidar, baudrate='115200')
 
     reactor.run()
