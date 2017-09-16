@@ -24,15 +24,15 @@ class GrblClient(Protocol):
     startUpMsg = re.compile(r'^Grbl (\S*)')
     respOkMsg = re.compile(r'^ok$')
     respErrorMsg = re.compile(r'^error:(.*)$')
-    statusReportMsg = re.compile(r'^<(\S*)>$')
+    statusReportMsg = re.compile(r'^<(\w*),(.*)>$')
 
     def __init__(self, handler):
         self.handler = handler
         self.port = None
         self.buffer = ''
 
-    def _handleStatusReportMsg(self, msg):
-        self.handler.statusUpdate(msg)
+    def _handleStatusReportMsg(self, state, data):
+        self.handler.statusUpdate(0)
 
     def _handleMsg(self, msg):
         match = self.startUpMsg.match(msg)
@@ -56,9 +56,10 @@ class GrblClient(Protocol):
 
         match = self.statusReportMsg.match(msg)
         if match:
-            status = match.group(1)
+            state = match.group(1)
+            data = match.group(2)
             log.debug('grbl status {msg!r}', msg=msg)
-            self._handleStatusReportMsg(status)
+            self._handleStatusReportMsg(state, data)
             return
 
         log.warn('grbl received unknown message {msg!r}', msg=msg)
