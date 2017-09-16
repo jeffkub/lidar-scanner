@@ -1,5 +1,8 @@
+from twisted.logger import Logger
 from twisted.internet.protocol import Protocol
 from twisted.internet.serialport import SerialPort
+
+log = Logger()
 
 
 class LidarClient(Protocol):
@@ -12,10 +15,10 @@ class LidarClient(Protocol):
 
     # Callbacks for events
     def connectionMade(self):
-        print('Connected to lidar device')
+        log.info('Connected to lidar device')
 
     def connectionLost(self, reason):
-        print('Disconnected from lidar device')
+        log.info('Disconnected from lidar device')
 
     def dataReceived(self, data):
-        print('Received data from lidar device: "{}"'.format(data))
+        log.info('Received data from lidar device: "{data!r}"', data=data)

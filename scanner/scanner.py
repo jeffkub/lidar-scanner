@@ -1,5 +1,7 @@
 import argparse
+import logging
 from twisted.internet import reactor, task
+from twisted.logger import globalLogPublisher, STDLibLogObserver
 from grbl_client import GrblClient, GrblHandler
 from lidar_client import LidarClient
 
@@ -23,6 +25,12 @@ def pollStatus():
 
 
 if __name__ == '__main__':
+    # Setup logging
+    logging.basicConfig()
+    logging.root.setLevel(logging.DEBUG)
+    globalLogPublisher.addObserver(STDLibLogObserver())
+
+    # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--grbl', default='/dev/grbl')
     parser.add_argument('--lidar', default='/dev/lidar')

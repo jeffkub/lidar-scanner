@@ -1,6 +1,9 @@
 import re
+from twisted.logger import Logger
 from twisted.internet.protocol import Protocol
 from twisted.internet.serialport import SerialPort
+
+log = Logger()
 
 
 class GrblHandler:
@@ -29,36 +32,36 @@ class GrblClient(Protocol):
         self.buffer = ''
 
     def _handleStatusReportMsg(self, msg):
-        print('grbl: status "{}"'.format(msg))
-        status = None
-        self.handler.statusUpdate(status)
+        self.handler.statusUpdate(msg)
 
     def _handleMsg(self, msg):
         match = self.startUpMsg.match(msg)
         if match:
             version = match.group(1)
-            print('grbl: version {}'.format(version))
+            log.info('grbl version {version!r}', version=version)
             return
 
         match = self.respOkMsg.match(msg)
         if match:
+            log.debug('grbl ok')
             self.handler.responseOk()
             return
 
         match = self.respErrorMsg.match(msg)
         if match:
             error = match.group(1)
-            print('grbl: error "{}"'.format(error))
+            log.error('grbl error "{error!r}"', error=error)
             self.handler.responseError(error)
             return
 
         match = self.statusReportMsg.match(msg)
         if match:
             status = match.group(1)
+            log.debug('grbl status "{msg!r}"', msg=msg)
             self._handleStatusReportMsg(status)
             return
 
-        print('grbl: received unknown message "{}"'.format(msg))
+        log.warn('grbl received unknown message "{msg!r}"', msg=msg)
 
     # Client methods
     def open(self, *args, **kwargs):
@@ -69,10 +72,10 @@ class GrblClient(Protocol):
 
     # Callbacks for events
     def connectionMade(self):
-        print('Connected to grbl device')
+        log.info('Connected to grbl device')
 
     def connectionLost(self, reason):
-        print('Disconnected from grbl device')
+        log.info('Disconnected from grbl device')
         self.port = None
         self.handler.disconnected()
 
