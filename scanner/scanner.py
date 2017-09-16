@@ -1,7 +1,25 @@
 import argparse
-from twisted.internet import reactor
-from grbl_client import GrblClient
+from twisted.internet import reactor, task
+from grbl_client import GrblClient, GrblHandler
 from lidar_client import LidarClient
+
+
+class GrblCallbacks(GrblHandler):
+    def responseOk(self):
+        pass
+
+    def responseError(self, error):
+        pass
+
+    def statusUpdate(self, status):
+        pass
+
+    def disconnected(self):
+        pollTask.stop()
+
+
+def pollStatus():
+    grbl.queryStatus()
 
 
 if __name__ == '__main__':
@@ -11,10 +29,13 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    grbl = GrblClient()
-    grbl.open(args.grbl, baudrate='115200')
+    grbl = GrblClient(GrblCallbacks())
+    grbl.open(args.grbl, reactor, baudrate='115200')
 
     lidar = LidarClient()
-    lidar.open(args.lidar, baudrate='115200')
+    lidar.open(args.lidar, reactor, baudrate='115200')
+
+    pollTask = task.LoopingCall(pollStatus)
+    pollTask.start(0.2)
 
     reactor.run()

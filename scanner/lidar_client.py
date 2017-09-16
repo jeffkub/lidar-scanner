@@ -8,8 +8,8 @@ class LidarClient(Protocol):
         self.port = None
 
     # Client methods
-    def open(self, port, *args, **kwargs):
-        self.port = SerialPort(self, port, reactor, *args, **kwargs)
+    def open(self, *args, **kwargs):
+        self.port = SerialPort(self, *args, **kwargs)
 
     # Callbacks for events
     def connectionMade(self):
