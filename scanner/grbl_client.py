@@ -36,7 +36,8 @@ class GrblClient(Protocol):
     def _handleMsg(self, msg):
         match = self.startUpMsg.match(msg)
         if match:
-            print('grbl: version {}'.format(match.group(1)))
+            version = match.group(1)
+            print('grbl: version {}'.format(version))
             return
 
         match = self.respOkMsg.match(msg)
@@ -46,13 +47,15 @@ class GrblClient(Protocol):
 
         match = self.respErrorMsg.match(msg)
         if match:
-            print('grbl: error "{}"'.format(match.group(1)))
-            self.handler.responseError(match.group(1))
+            error = match.group(1)
+            print('grbl: error "{}"'.format(error))
+            self.handler.responseError(error)
             return
 
         match = self.statusReportMsg.match(msg)
         if match:
-            self._handleStatusReportMsg(match.group(1))
+            status = match.group(1)
+            self._handleStatusReportMsg(status)
             return
 
         print('grbl: received unknown message "{}"'.format(msg))
