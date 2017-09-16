@@ -50,18 +50,18 @@ class GrblClient(Protocol):
         match = self.respErrorMsg.match(msg)
         if match:
             error = match.group(1)
-            log.error('grbl error "{error!r}"', error=error)
+            log.error('grbl error {error!r}', error=error)
             self.handler.responseError(error)
             return
 
         match = self.statusReportMsg.match(msg)
         if match:
             status = match.group(1)
-            log.debug('grbl status "{msg!r}"', msg=msg)
+            log.debug('grbl status {msg!r}', msg=msg)
             self._handleStatusReportMsg(status)
             return
 
-        log.warn('grbl received unknown message "{msg!r}"', msg=msg)
+        log.warn('grbl received unknown message {msg!r}', msg=msg)
 
     # Client methods
     def open(self, *args, **kwargs):

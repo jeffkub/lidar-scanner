@@ -21,4 +21,4 @@ class LidarClient(Protocol):
         log.info('Disconnected from lidar device')
 
     def dataReceived(self, data):
-        log.info('Received data from lidar device: "{data!r}"', data=data)
+        log.info('Received data from lidar device {data!r}', data=data)
