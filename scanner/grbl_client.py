@@ -24,7 +24,7 @@ class GrblClient(Protocol):
     startUpMsg = re.compile(r'^Grbl (\S*)')
     respOkMsg = re.compile(r'^ok$')
     respErrorMsg = re.compile(r'^error:(.*)$')
-    statusReportMsg = re.compile(r'^<(\w*),(.*)>$')
+    statusReportMsg = re.compile(r'^<(\w*)\|(.*)>$')
 
     def __init__(self, handler):
         self.handler = handler
@@ -32,7 +32,14 @@ class GrblClient(Protocol):
         self.buffer = ''
 
     def _handleStatusReportMsg(self, state, data):
-        self.handler.statusUpdate(0)
+        status = {'State': state}
+
+        for field in data.split('|'):
+            type, value = field.split(':')
+            status[type] = value.split(',')
+
+        log.info('grbl status {status!r}', status=status)
+        self.handler.statusUpdate(status)
 
     def _handleMsg(self, msg):
         match = self.startUpMsg.match(msg)
