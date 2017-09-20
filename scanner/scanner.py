@@ -46,7 +46,7 @@ if __name__ == '__main__':
     pollTask = task.LoopingCall(pollStatus)
     pollTask.start(0.2)
 
-    grbl.queueCommand(LinearMove(xpos=-90, ypos=90))
-    grbl.queueCommand(LinearMove(xpos=90, ypos=-90))
+    grbl.queueCommand(LinearMove(xpos=-90, ypos=90, feedrate=1800))
+    grbl.queueCommand(LinearMove(xpos=90, ypos=-90, feedrate=1800))
 
     reactor.run()
