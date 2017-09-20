@@ -1,6 +1,6 @@
 import argparse
 import logging
-from twisted.internet import reactor, task
+from twisted.internet import reactor
 from twisted.logger import globalLogPublisher, STDLibLogObserver
 from grbl_client import GrblClient, GrblHandler, LinearMove
 from lidar_client import LidarClient
@@ -17,11 +17,7 @@ class GrblCallbacks(GrblHandler):
         pass
 
     def disconnected(self):
-        pollTask.stop()
-
-
-def pollStatus():
-    grbl.queryStatus()
+        pass
 
 
 if __name__ == '__main__':
@@ -42,9 +38,6 @@ if __name__ == '__main__':
 
     lidar = LidarClient()
     lidar.open(args.lidar, reactor, baudrate='115200')
-
-    pollTask = task.LoopingCall(pollStatus)
-    pollTask.start(0.2)
 
     grbl.queueCommand(LinearMove(xpos=-90, ypos=90, feedrate=1800))
     grbl.queueCommand(LinearMove(xpos=90, ypos=-90, feedrate=1800))

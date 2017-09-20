@@ -1,8 +1,9 @@
 import collections
 import re
-from twisted.logger import Logger
+from twisted.internet import task
 from twisted.internet.protocol import Protocol
 from twisted.internet.serialport import SerialPort
+from twisted.logger import Logger
 
 log = Logger()
 
@@ -49,14 +50,15 @@ class LinearMove(CommandBase):
 
 
 class GrblClient(Protocol):
-    startUpMsg = re.compile(r'^Grbl (\S*)')
-    respOkMsg = re.compile(r'^ok$')
-    respErrorMsg = re.compile(r'^error:(.*)$')
-    statusReportMsg = re.compile(r'^<(.*)>$')
+    start_up_msg = re.compile(r'^Grbl (\S*)')
+    resp_ok_msg = re.compile(r'^ok$')
+    resp_error_msg = re.compile(r'^error:(.*)$')
+    status_report_msg = re.compile(r'^<(.*)>$')
 
     def __init__(self, handler):
         self.handler = handler
         self.port = None
+        self.poll_task = task.LoopingCall(self.queryStatus)
         self.buffer = ''
         self.cmd_queue = collections.deque()
         self.ack_queue = collections.deque()
@@ -66,8 +68,6 @@ class GrblClient(Protocol):
     # Incoming message handlers
     def _handleStartUpMsg(self, version):
         log.info('grbl version {version!r}', version=version)
-
-        self.queryStatus()
 
     def _handleOkMsg(self):
         log.debug('grbl ok')
@@ -104,22 +104,22 @@ class GrblClient(Protocol):
             self.handler.positionUpdate(position)
 
     def _handleMsg(self, msg):
-        match = self.startUpMsg.match(msg)
+        match = self.start_up_msg.match(msg)
         if match:
             self._handleStartUpMsg(version=match.group(1))
             return
 
-        match = self.respOkMsg.match(msg)
+        match = self.resp_ok_msg.match(msg)
         if match:
             self._handleOkMsg()
             return
 
-        match = self.respErrorMsg.match(msg)
+        match = self.resp_error_msg.match(msg)
         if match:
             self._handleErrorMsg(error=match.group(1))
             return
 
-        match = self.statusReportMsg.match(msg)
+        match = self.status_report_msg.match(msg)
         if match:
             self._handleStatusReportMsg(data=match.group(1))
             return
@@ -152,6 +152,11 @@ class GrblClient(Protocol):
     def open(self, *args, **kwargs):
         self.port = SerialPort(self, *args, **kwargs)
 
+        # TODO: Re-init class variables
+
+        # Start polling status
+        self.poll_task.start(0.2)
+
     def queryStatus(self):
         self.port.write('?'.encode())
 
@@ -166,6 +171,7 @@ class GrblClient(Protocol):
     def connectionLost(self, reason):
         log.info('Disconnected from grbl device')
         self.port = None
+        self.poll_task.stop()
         self.handler.disconnected()
 
     def dataReceived(self, data):
