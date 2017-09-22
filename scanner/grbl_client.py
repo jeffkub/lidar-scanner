@@ -1,4 +1,5 @@
 import collections
+from enum import Enum
 import re
 from twisted.internet import task
 from twisted.internet.protocol import Protocol
@@ -6,6 +7,19 @@ from twisted.internet.serialport import SerialPort
 from twisted.logger import Logger
 
 log = Logger()
+
+
+class GrblState(Enum):
+    Unknown = 'Unknown'
+    Idle = 'Idle'
+    Run = 'Run'
+    Hold = 'Hold'
+    Jog = 'Jog'
+    Alarm = 'Alarm'
+    Door = 'Door'
+    Check = 'Check'
+    Home = 'Home'
+    Sleep = 'Sleep'
 
 
 class GrblHandler:
@@ -28,20 +42,20 @@ class CommandBase:
 
 
 class LinearMove(CommandBase):
-    def __init__(self, **kwargs):
+    def __init__(self, xpos=None, ypos=None, zpos=None, feedrate=None):
         self._gcode = 'G1'
 
-        if 'xpos' in kwargs:
-            self._gcode += ' X{}'.format(kwargs['xpos'])
+        if xpos is not None:
+            self._gcode += ' X{}'.format(xpos)
 
-        if 'ypos' in kwargs:
-            self._gcode += ' Y{}'.format(kwargs['ypos'])
+        if ypos is not None:
+            self._gcode += ' Y{}'.format(ypos)
 
-        if 'zpos' in kwargs:
-            self._gcode += ' Z{}'.format(kwargs['zpos'])
+        if zpos is not None:
+            self._gcode += ' Z{}'.format(zpos)
 
-        if 'feedrate' in kwargs:
-            self._gcode += ' F{}'.format(kwargs['feedrate'])
+        if feedrate is not None:
+            self._gcode += ' F{}'.format(feedrate)
 
         self._gcode += '\n'
 
@@ -63,7 +77,7 @@ class GrblClient(Protocol):
         self.cmd_queue = collections.deque()
         self.ack_queue = collections.deque()
         self.buf_level = 120
-        self.state = 'Unknown'
+        self.state = GrblState.Unknown
 
     # Incoming message handlers
     def _handleStartUpMsg(self, version):
@@ -96,7 +110,7 @@ class GrblClient(Protocol):
             type, value = field.split(':')
             status[type] = value.split(',')
 
-        self.state = fields[0]
+        self.state = GrblState(fields[0])
         self._serviceQueue()
 
         if 'MPos' in status:
@@ -128,7 +142,7 @@ class GrblClient(Protocol):
 
     # Send queued messages if there is space in grbl's receive buffer
     def _serviceQueue(self):
-        if self.state is 'Unknown':
+        if self.state is GrblState.Unknown:
             return
 
         if not self.cmd_queue:
