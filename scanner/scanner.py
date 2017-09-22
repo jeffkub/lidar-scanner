@@ -7,10 +7,13 @@ from lidar_client import LidarClient
 
 
 class GrblCallbacks(GrblHandler):
-    def responseOk(self):
+    def startup(self, version):
         pass
 
-    def responseError(self, error):
+    def responseOk(self, command):
+        pass
+
+    def responseError(self, command, error):
         pass
 
     def positionUpdate(self, status):

@@ -23,10 +23,13 @@ class GrblState(Enum):
 
 
 class GrblHandler:
-    def responseOk(self):
+    def startup(self, version):
         pass
 
-    def responseError(self, error):
+    def responseOk(self, command):
+        pass
+
+    def responseError(self, command, error):
         pass
 
     def positionUpdate(self, mpos):
@@ -83,6 +86,8 @@ class GrblClient(Protocol):
     def _handleStartUpMsg(self, version):
         log.info('grbl version {version!r}', version=version)
 
+        self.handler.startup(version)
+
     def _handleOkMsg(self):
         log.debug('grbl ok')
 
@@ -93,12 +98,19 @@ class GrblClient(Protocol):
         # Send queued commands if possible
         self._serviceQueue()
 
-        self.handler.responseOk()
+        self.handler.responseOk(cmd)
 
     def _handleErrorMsg(self, error):
         log.error('grbl error {error!r}', error=error)
 
-        self.handler.responseError(error)
+        # Pop command off ack queue and update buffer level
+        cmd = self.ack_queue.popleft()
+        self.buf_level += len(cmd.gcode())
+
+        # Send queued commands if possible
+        self._serviceQueue()
+
+        self.handler.responseError(cmd, error)
 
     def _handleStatusReportMsg(self, data):
         log.debug('grbl status {data!r}', data=data)
