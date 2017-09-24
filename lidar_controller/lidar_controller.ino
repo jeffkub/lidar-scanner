@@ -13,6 +13,14 @@ void setup()
 
 void loop()
 {
-  Serial.println(lidar.distance());
+  int dist;
+  unsigned long timestamp;
+
+  dist = lidar.distance();
+  timestamp = millis();
+  
+  Serial.print(timestamp);
+  Serial.print(",");
+  Serial.println(dist);
 }
 
