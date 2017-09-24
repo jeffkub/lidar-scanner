@@ -1,14 +1,57 @@
-#include <Wire.h>
 #include <LIDARLite.h>
 
+typedef enum
+{
+  Stopped = 0,
+  Running
+} State;
+
+State state = Stopped;
+String input;
 LIDARLite lidar;
 
 void setup()
 {
-  Serial.begin(115200); // Initialize serial connection to display distance readings
+  Serial.begin(115200);
+  input.reserve(128);
 
-  lidar.begin(0, true); // Set configuration to default and I2C to 400 kHz
-  lidar.configure(0); // Change this number to try out alternate configurations
+  return;
+}
+
+void handleCommand(String & cmd)
+{
+  if(state == Stopped && cmd == "start")
+  {
+    lidar.begin(0, true);
+    lidar.configure(0);
+
+    state = Running;
+  }
+  else if(state == Running && cmd == "stop")
+  {
+    lidar.reset();
+
+    state = Stopped;
+  }
+  
+  return;
+}
+
+void readInput(void)
+{
+  while(Serial.available())
+  {
+    input += (char)Serial.read();
+
+    if(input.endsWith("\n"))
+    {
+      input.trim();
+      handleCommand(input);
+      input = "";
+    }
+  }
+  
+  return;
 }
 
 void loop()
@@ -16,11 +59,18 @@ void loop()
   int dist;
   unsigned long timestamp;
 
-  dist = lidar.distance();
-  timestamp = millis();
-  
-  Serial.print(timestamp);
-  Serial.print(",");
-  Serial.println(dist);
+  readInput();
+
+  if(state == Running)
+  {
+    dist = lidar.distance();
+    timestamp = millis();
+    
+    Serial.print(timestamp);
+    Serial.print(",");
+    Serial.println(dist);
+  }
+
+  return;
 }
 
