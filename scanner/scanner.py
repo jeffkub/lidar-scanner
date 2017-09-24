@@ -3,7 +3,7 @@ import logging
 from twisted.internet import reactor
 from twisted.logger import globalLogPublisher, STDLibLogObserver
 from grbl_client import GrblClient, GrblHandler, LinearMove
-from lidar_client import LidarClient
+from lidar_client import LidarClient, LidarHandler
 
 
 class GrblCallbacks(GrblHandler):
@@ -17,6 +17,14 @@ class GrblCallbacks(GrblHandler):
         pass
 
     def positionUpdate(self, status):
+        pass
+
+    def disconnected(self):
+        pass
+
+
+class LidarCallbacks(LidarHandler):
+    def distanceUpdate(self, timestamp, dist):
         pass
 
     def disconnected(self):
@@ -39,10 +47,12 @@ if __name__ == '__main__':
     grbl = GrblClient(GrblCallbacks())
     grbl.open(args.grbl, reactor, baudrate='115200')
 
-    lidar = LidarClient()
+    lidar = LidarClient(LidarCallbacks())
     lidar.open(args.lidar, reactor, baudrate='115200')
 
     grbl.queueCommand(LinearMove(xpos=-90, ypos=90, feedrate=1800))
     grbl.queueCommand(LinearMove(xpos=90, ypos=-90, feedrate=1800))
+
+    lidar.start()
 
     reactor.run()
