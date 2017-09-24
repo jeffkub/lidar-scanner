@@ -28,9 +28,11 @@ class LidarClient(Protocol):
         self.port = SerialPort(self, *args, **kwargs)
 
     def start(self):
+        log.info('Starting lidar')
         self.port.write('start\n'.encode())
 
     def stop(self):
+        log.info('Stopping lidar')
         self.port.write('stop\n'.encode())
 
     # Callbacks for events
